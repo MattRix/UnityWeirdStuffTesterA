@@ -8,17 +8,18 @@ using System.IO;
 using UnityEditor;
 #endif
 
+[ExecuteInEditMode]
 public class TextureSwitcher : MonoBehaviour 
 {
-	public UnityEngine.Object obj;
+	public Texture obj;
 
 	public string path;
 
+	[HideInInspector] public byte[] imageData;
+
+	#if UNITY_EDITOR
 	public void OnValidate()
 	{
-#if UNITY_EDITOR
-		var mat = renderer.sharedMaterial;
-
 		if(obj != null)
 		{
 			var tex2D = obj as Texture2D;
@@ -30,19 +31,23 @@ public class TextureSwitcher : MonoBehaviour
 
 		if(path != "")
 		{
-			Texture2D texture = new Texture2D(0,0,TextureFormat.ARGB32,false);
-//
-			var bytes = File.ReadAllBytes(path);
-//
-			texture.LoadImage(bytes);
-//
-			mat.mainTexture = texture;
-			mat.mainTexture.hideFlags = HideFlags.DontSave;
+			imageData = File.ReadAllBytes(path);
 		}
+	}
+	#endif
 
-		Debug.Log ("hide flags " + mat.mainTexture.hideFlags);
-//					mat.mainTexture.hideFlags = HideFlags.DontSave;
-//		Debug.Log ("setting don't save");
-#endif
+	public void Update()
+	{
+		var mat = renderer.sharedMaterial;
+
+		if(mat.mainTexture == null)
+		{
+			if(imageData != null)
+			{
+				Texture2D texture = new Texture2D(0,0,TextureFormat.ARGB32,false);
+				texture.LoadImage(imageData);
+				mat.mainTexture = texture;
+			}
+		}
 	}
 }
